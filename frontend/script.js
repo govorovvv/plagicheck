@@ -136,12 +136,51 @@ if (dropzone && fileInput) {
       dropzone.classList.remove("drag");
     })
   );
-  dropzone.addEventListener("drop", (e) => {
+
+  // заменённый обработчик drop
+  dropzone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const files = e.dataTransfer.files;
     if (!files || !files.length) return;
-    fileInput.files = files;
-    const msg = validateFile(files[0]);
+
+    const file = files[0];
+    fileInput.files = files; // обновляем input
+
+    const err = validateFile(file);
     const p = dropzone.querySelector("p");
-    if (p) p.textContent = msg ? msg : `Выбран файл: ${files[0].name}`;
+    if (err) {
+      if (p) p.textContent = err;
+      return;
+    }
+
+    if (p) p.textContent = `Выбран файл: ${file.name}, проверяем…`;
+
+    // автостарт проверки файла
+    try {
+      fileBtn.disabled = true;
+      fileBtn.textContent = "Проверяем…";
+
+      const formData = new FormData();
+      formData.append("file", file);
+      const data = await postForm("/api/check-file", formData);
+
+      fileResult.innerHTML =
+        `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
+        `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
+
+      const id = data.report_id;
+      if (id) {
+        fileReportLink.href = `/api/report/${id}`;
+        fileReportLink.textContent = "Скачать PDF-отчёт";
+        fileReportLink.style.display = "inline";
+      }
+    } catch (err) {
+      fileResult.textContent = err.message || "Не удалось проверить файл.";
+    } finally {
+      fileBtn.disabled = false;
+      fileBtn.textContent = "Проверить файл";
+    }
   });
 }
