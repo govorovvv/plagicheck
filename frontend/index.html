@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PlagiCheck — проверка текста</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; max-width: 760px; margin: 40px auto; padding: 0 16px; }
+    h1 { margin-bottom: 8px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 16px 0; }
+    label { font-weight: 600; }
+    textarea { width: 100%; min-height: 160px; }
+    button { cursor: pointer; padding: 10px 16px; border-radius: 8px; border: 1px solid #111; background:#111; color:#fff; }
+    input[type=file]{ margin: 8px 0; }
+    .muted { color:#6b7280; font-size: 14px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h1>PlagiCheck</h1>
+  <p class="muted">Онлайн-сервис для проверки текста на заимствования. Демо-версия: результат фиксированный.</p>
+
+  <div class="card">
+    <h3>Проверка текста</h3>
+    <form id="textForm">
+      <label for="text">Вставьте текст</label><br/>
+      <textarea id="text" name="text" placeholder="Вставьте ваш текст здесь..."></textarea><br/>
+      <div class="row">
+        <button type="submit">Проверить</button>
+        <a id="textReportLink" class="muted" href="#" style="align-self:center; display:none;">Скачать PDF-отчёт</a>
+      </div>
+    </form>
+    <p id="textResult" style="margin-top:10px;"></p>
+  </div>
+
+  <div class="card">
+    <h3>Проверка файла</h3>
+    <form id="fileForm">
+      <input type="file" id="file" name="file" accept=".txt,.pdf,.doc,.docx" />
+      <div class="row">
+        <button type="submit">Проверить файл</button>
+        <a id="fileReportLink" class="muted" href="#" style="align-self:center; display:none;">Скачать PDF-отчёт</a>
+      </div>
+    </form>
+    <p id="fileResult" style="margin-top:10px;"></p>
+  </div>
+
+  <p class="muted">Оригинальность по умолчанию: <b>83,3%</b> (заимствования: 16,7%). В полной версии появится реальный анализ.</p>
+
+  <script src="./script.js"></script>
+</body>
+</html>
