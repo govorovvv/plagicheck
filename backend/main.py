@@ -1,58 +1,73 @@
 from fastapi import FastAPI, UploadFile, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from hashlib import sha256
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from weasyprint import HTML
 from uuid import uuid4
 from datetime import datetime
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
+from pathlib import Path
 
 app = FastAPI()
 
-FIXED_ORIG = 83.3
-FIXED_PLAG = 100 - FIXED_ORIG
+# Константы демо
+ORIGINALITY = 83.3
+PLAGIARISM = 16.7
 
-def _make_report_pdf(path: str, meta: dict):
-    c = canvas.Canvas(path, pagesize=A4)
-    w, h = A4
-    y = h - 50
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, y, "PlagiCheck — Отчёт о проверке")
-    c.setFont("Helvetica", 11)
-    y -= 25
-    c.drawString(50, y, f"Дата: {meta.get('ts', '')}")
-    y -= 18
-    c.drawString(50, y, f"ID отчёта: {meta.get('report_id', '')}")
-    y -= 18
-    c.drawString(50, y, f"Хеш документа (SHA-256): {meta.get('doc_hash', '')[:64]}")
-    y -= 30
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(50, y, f"Оригинальность: {FIXED_ORIG:.1f}%")
-    y -= 20
-    c.drawString(50, y, f"Заимствования: {FIXED_PLAG:.1f}%")
-    y -= 30
-    c.setFont("Helvetica", 10)
-    c.drawString(50, y, "Дисклеймер: демо-версия — результат фиксированный и предназначен для демонстрации.")
-    c.showPage()
-    c.save()
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+STATIC_DIR = BASE_DIR / "static"
 
-@app.post("/check-text")
+env = Environment(
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
+    autoescape=select_autoescape(["html", "xml"])
+)
+
+def render_pdf(report_id: str, originality: float, plagiarism: float) -> bytes:
+    template = env.get_template("report.html")
+    html_str = template.render(
+        report_id=report_id,
+        originality=f"{originality:.1f}",
+        plagiarism=f"{plagiarism:.1f}",
+        created_at=datetime.now().strftime("%d.%m.%Y %H:%M"),
+        year=datetime.now().year
+    )
+    # base_url нужен, чтобы WeasyPrint видел относительные пути (../static/report.css)
+    pdf_bytes = HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()
+    return pdf_bytes
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+@app.post("/api/check-text")
 async def check_text(text: str = Form(...)):
-    report_id = str(uuid4())
-    doc_hash = sha256(text.encode("utf-8")).hexdigest()
-    return {"originality": FIXED_ORIG, "plagiarism": FIXED_PLAG, "report_id": report_id, "hash": doc_hash}
+    # Можно посчитать хеш, размер и т.п. (на будущее в отчёт)
+    text_bytes = text.encode("utf-8", errors="ignore")
+    _doc_hash = sha256(text_bytes).hexdigest()[:12]
 
-@app.post("/check-file")
+    report_id = str(uuid4())
+    return {
+        "originality": ORIGINALITY,
+        "plagiarism": PLAGIARISM,
+        "report_id": report_id
+    }
+
+@app.post("/api/check-file")
 async def check_file(file: UploadFile):
-    data = await file.read()
-    report_id = str(uuid4())
-    doc_hash = sha256(data).hexdigest()
-    return {"originality": FIXED_ORIG, "plagiarism": FIXED_PLAG, "report_id": report_id, "hash": doc_hash}
+    _blob = await file.read()
+    _doc_hash = sha256(_blob).hexdigest()[:12]
 
-@app.get("/report/{report_id}")
-async def get_report(report_id: str, doc_hash: str = "", ts: str = ""):
-    """Генерируем PDF на лету. Клиент передаёт хеш и время (или можешь генерить тут)."""
-    if not ts:
-        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    filename = f"/tmp/{report_id}.pdf"
-    _make_report_pdf(filename, {"report_id": report_id, "doc_hash": doc_hash, "ts": ts})
-    return FileResponse(filename, media_type="application/pdf", filename=f"PlagiCheck-{report_id}.pdf")
+    report_id = str(uuid4())
+    return {
+        "originality": ORIGINALITY,
+        "plagiarism": PLAGIARISM,
+        "report_id": report_id
+    }
+
+@app.get("/api/report/{report_id}")
+async def get_report(report_id: str):
+    pdf_bytes = render_pdf(report_id, ORIGINALITY, PLAGIARISM)
+    headers = {
+        "Content-Disposition": 'inline; filename="report.pdf"'
+    }
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
