@@ -27,6 +27,17 @@ function withLoading(btn, fn) {
   };
 }
 
+async function postForm(url, formData) {
+  const res = await fetch(url, { method: "POST", body: formData });
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok) {
+    const msg = (data && data.detail) ? data.detail : "Ошибка API";
+    throw new Error(msg);
+  }
+  return data;
+}
+
 // ТЕКСТ
 textForm.addEventListener(
   "submit",
@@ -34,7 +45,7 @@ textForm.addEventListener(
     e.preventDefault();
     textResult.textContent = "";
     textReportLink.style.display = "none";
-
+    const data = await postForm("/api/check-text", formData);
     const formData = new FormData(textForm);
     const txt = (formData.get("text") || "").toString().trim();
     if (!txt) {
@@ -54,8 +65,8 @@ textForm.addEventListener(
         textReportLink.style.display = "inline";
         textReportLink.textContent = "Скачать PDF-отчёт";
       }
-    } catch {
-      textResult.textContent = "Не удалось выполнить проверку. Попробуйте ещё раз.";
+    } catch (err) {
+	textResult.textContent = err.message || "Не удалось выполнить проверку.";
     }
   })
 );
@@ -67,7 +78,7 @@ fileForm.addEventListener(
     e.preventDefault();
     fileResult.textContent = "";
     fileReportLink.style.display = "none";
-
+    const data = await postForm("/api/check-file", formData);
     const file = fileInput.files[0];
     const err = validateFile(file);
     if (err) { fileResult.textContent = err; return; }
@@ -86,9 +97,9 @@ fileForm.addEventListener(
         fileReportLink.style.display = "inline";
         fileReportLink.textContent = "Скачать PDF-отчёт";
       }
-    } catch {
-      fileResult.textContent = "Не удалось проверить файл. Попробуйте ещё раз.";
-    }
+   } catch (err) {
+	fileResult.textContent = err.message || "Не удалось проверить файл.";
+   }
   })
 );
 

@@ -33,6 +33,24 @@
     <div class="muted">Демо-версия. Результат фиксированный и предназначен для демонстрации.</div>
   </section>
 
+  <section class="meta">
+    <div><b>ID отчёта:</b> {{ report_id }}</div>
+    <div><b>Дата/время:</b> {{ created_at }}</div>
+    {% if meta %}
+      <div><b>Тип входа:</b> {{ meta.input_type }}</div>
+      {% if meta.filename %}<div><b>Имя файла:</b> {{ meta.filename }}</div>{% endif %}
+      {% if meta.mimetype %}<div><b>MIME:</b> {{ meta.mimetype }}</div>{% endif %}
+      {% if meta.size_bytes is not none %}<div><b>Размер:</b> {{ meta.size_bytes }} байт</div>{% endif %}
+      {% if meta.word_count is not none %}<div><b>Слова:</b> {{ meta.word_count }}</div>{% endif %}
+      {% if meta.char_count is not none %}<div><b>Символы:</b> {{ meta.char_count }}</div>{% endif %}
+      {% if meta.doc_hash %}<div><b>Хеш (SHA-256, 12):</b> {{ meta.doc_hash }}</div>{% endif %}
+    {% endif %}
+    <div class="muted" style="margin-top:6px">
+      Демо-версия. Результат фиксированный и предназначен для демонстрации.
+    </div>
+  </section>
+
+
   <footer class="footer">
     © {{ year }} PlagiCheck — plagicheck.ru
   </footer>
