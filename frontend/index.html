@@ -50,18 +50,25 @@
       </form>
     </section>
 
-    <section class="card">
-      <h2>Проверить файл</h2>
-      <form id="fileForm" class="form" enctype="multipart/form-data">
-        <label for="file">Выберите файл (TXT, DOCX, PDF)</label>
-        <input id="file" name="file" type="file" accept=".txt,.doc,.docx,.pdf" />
-        <div class="hint muted">Максимальный размер: 10 МБ</div>
-        <div class="row">
-          <button type="submit" id="fileBtn">Проверить файл</button>
-          <a id="fileReportLink" class="link" href="#" style="display:none;">Скачать PDF-отчёт</a>
-        </div>
-        <p id="fileResult" class="result"></p>
-      </form>
+    <section class="card" id="check-file">
+  <h2>Проверка файла</h2>
+  <form id="fileForm" class="form">
+    <label for="fileInput">Загрузите документ (TXT, DOC, DOCX, PDF)</label>
+    <input type="file"
+           id="fileInput"
+           name="file"
+           accept=".txt,.doc,.docx,.pdf"
+           required>
+
+    <div class="row">
+      <button id="fileBtn" type="submit">Проверить файл</button>
+      <a id="fileReportLink" href="#" style="display:none" class="btn-ghost">Скачать PDF-отчёт</a>
+    </div>
+
+    <div id="fileResult" class="result muted"></div>
+  </form>
+</section>
+
 
       <div id="dropzone" class="dropzone">
         <p>или перетащите файл сюда</p>
