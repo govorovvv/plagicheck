@@ -15,7 +15,8 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <header class="container header">
+  <header class="header">
+  <div class="container wrap">
     <div class="brand">
       <span class="logo">P</span>
       <span class="brand-text">PlagiCheck</span>
@@ -23,15 +24,18 @@
     <nav class="nav">
       <a href="#check">Проверка</a>
       <a href="#about">Как это работает</a>
-      <a href="#legal">Политика</a>
+      <a href="/privacy.html">Политика</a>
+      <a href="/terms.html">Условия</a>
     </nav>
-  </header>
+  </div>
+</header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>Проверка текста на заимствования</h1>
-      <p class="muted">Загрузите документ или вставьте текст — получите отчёт за секунды. Демо-версия: результат фиксированный.</p>
-    </section>
+<main class="container">
+  <section class="hero">
+    <span class="badge">Демо-версия</span>
+    <h1>Проверка текста на заимствования</h1>
+    <p class="muted">Загрузите документ или вставьте текст — получите PDF-отчёт за секунды.</p>
+  </section>
 
     <section id="check" class="card">
       <h2>Проверить текст</h2>
@@ -83,9 +87,15 @@
     </section>
   </main>
 
-  <footer class="container footer">
+<footer class="footer">
+  <div class="container wrap">
     <span class="muted">© <span id="year"></span> PlagiCheck</span>
-  </footer>
+    <div>
+      <a class="link" href="/privacy.html">Политика</a> ·
+      <a class="link" href="/terms.html">Условия</a>
+    </div>
+  </div>
+</footer>
 
   <script src="./script.js"></script>
 </body>
