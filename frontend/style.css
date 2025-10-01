@@ -111,3 +111,37 @@ button[disabled]{opacity:.6; cursor:not-allowed}
 /* ссылки */
 a.link{color:var(--accent); text-decoration:none; border-bottom:1px dashed rgba(37,99,235,.35)}
 a.link:hover{border-bottom-color:transparent}
+
+.hero-image {
+  position: relative;
+  display: inline-block;
+  max-width: 900px;
+  width: 100%;
+}
+.hero-image img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.1);
+  display: block;
+}
+.hero-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  padding: 16px 48px;
+  background: #2563eb;        /* синий фон */
+  color: #fff;                /* белый текст */
+  border-radius: 12px;
+  border: 2px solid #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(37,99,235,.25);
+  transition: all 0.2s ease;
+}
+.hero-btn:hover {
+  background: #1d4ed8;        /* более тёмный синий при наведении */
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: 0 10px 24px rgba(37,99,235,.35);
+}
