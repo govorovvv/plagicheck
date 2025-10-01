@@ -1,102 +1,48 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="PlagiCheck — онлайн-сервис проверки текста на заимствования. Загрузите документ или вставьте текст и получите PDF-отчёт.">
-  <meta property="og:title" content="PlagiCheck — проверка текста на заимствования">
-  <meta property="og:description" content="Проверка текста и PDF-отчёт за секунды. Демо-версия.">
-  <meta property="og:url" content="https://plagicheck.ru/">
-  <meta property="og:type" content="website">
-  <meta name="theme-color" content="#000000">
-
-  <title>PlagiCheck — проверка текста на заимствования</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="./style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PlagiCheck — проверка на заимствования</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="header">
-  <div class="container wrap">
-    <div class="brand">
-      <span class="logo">P</span>
-      <span class="brand-text">PlagiCheck</span>
+    <div class="container wrap">
+      <div class="brand">
+        <span class="logo">P</span>
+        <span class="brand-text">PlagiCheck</span>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Главная</a>
+        <a href="app.html">Проверка</a>
+        <a href="about.html">О сервисе</a>
+        <a href="contacts.html">Контакты</a>
+      </nav>
     </div>
-    <nav class="nav">
-      <a href="#check">Проверка</a>
-      <a href="#about">Как это работает</a>
-      <a href="/privacy.html">Политика</a>
-      <a href="/terms.html">Условия</a>
-    </nav>
-  </div>
-</header>
+  </header>
 
-<main class="container">
-  <section class="hero">
-    <span class="badge">Демо-версия</span>
-    <h1>Проверка текста на заимствования</h1>
-    <p class="muted">Загрузите документ или вставьте текст — получите PDF-отчёт за секунды.</p>
-  </section>
+  <main class="container hero" style="text-align:center; padding:60px 0;">
+    <!-- Здесь твоя картинка -->
+    <img src="main-image.png" alt="PlagiCheck" style="max-width:600px; width:100%; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.1);">
 
-    <section id="check" class="card">
-      <h2>Проверить текст</h2>
-      <form id="textForm" class="form">
-        <label for="text">Вставьте текст</label>
-        <textarea id="text" name="text" placeholder="Вставьте сюда ваш текст…"></textarea>
-        <div class="row">
-          <button type="submit" id="textBtn">Проверить</button>
-          <a id="textReportLink" class="link" href="#" style="display:none;">Скачать PDF-отчёт</a>
-        </div>
-        <p id="textResult" class="result"></p>
-      </form>
-    </section>
-
-    <section class="card" id="check-file">
-  <h2>Проверка файла</h2>
-  <form id="fileForm" class="form">
-    <label for="fileInput">Загрузите документ (TXT, DOC, DOCX, PDF)</label>
-    <input type="file"
-           id="fileInput"
-           name="file"
-           accept=".txt,.doc,.docx,.pdf"
-           required>
-
-    <div class="row">
-      <button id="fileBtn" type="submit">Проверить файл</button>
-      <a id="fileReportLink" href="#" style="display:none" class="btn-ghost">Скачать PDF-отчёт</a>
+    <!-- Кнопка входа -->
+    <div style="margin-top:30px;">
+      <a href="app.html" class="btn" style="font-size:20px; padding:16px 40px;">ВХОД</a>
     </div>
-
-    <div id="fileResult" class="result muted"></div>
-  </form>
-</section>
-
-
-      
-
-    <section id="about" class="card">
-      <h2>Как это работает</h2>
-      <ul class="list">
-        <li>В демо-версии система всегда возвращает <b>83,3%</b> оригинальности (16,7% заимствований).</li>
-        <li>Можно вставить текст или загрузить файл (TXT, DOCX, PDF).</li>
-        <li>Доступна выгрузка PDF-отчёта с процентами и датой проверки.</li>
-      </ul>
-	<p class="muted">
-  Смотрите <a href="/privacy.html" class="link">Политику конфиденциальности</a> и
-  <a href="/terms.html" class="link">Пользовательское соглашение</a>.
-	</p>
-    </section>
-
   </main>
 
-<footer class="footer">
-  <div class="container wrap">
-    <span class="muted">© <span id="year"></span> PlagiCheck</span>
-    <div>
-      <a class="link" href="/privacy.html">Политика</a> ·
-      <a class="link" href="/terms.html">Условия</a>
+  <footer class="footer">
+    <div class="container wrap">
+      <span class="muted">© <span id="year"></span> PlagiCheck</span>
+      <div>
+        <a class="link" href="/privacy.html">Политика</a> ·
+        <a class="link" href="/terms.html">Условия</a>
+      </div>
     </div>
-  </div>
-</footer>
+  </footer>
 
-  <script src="./script.js" defer></script>
+  <script src="script.js" defer></script>
 </body>
 </html>
