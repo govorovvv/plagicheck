@@ -160,7 +160,6 @@ a.link:hover{border-bottom-color:transparent}
   text-decoration: none;
 }
 
-/* фиксированная шапка поверх контента */
 .header{
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -169,8 +168,8 @@ a.link:hover{border-bottom-color:transparent}
   box-shadow: 0 2px 6px rgba(0,0,0,.05);
 }
 
-/* (временно) базовый отступ под шапку на случай первой отрисовки */
-body{ padding-top: 72px; }  /* подстрой под свою высоту */
+/* базовый отступ на случай первой отрисовки, точный задаёт JS */
+body{ padding-top: 72px; }
 
 
 
