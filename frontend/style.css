@@ -149,3 +149,13 @@ a.link:hover{border-bottom-color:transparent}
   box-shadow: 0 10px 24px rgba(37,99,235,.35);
 }
 
+.logo-img {
+  height: 48px;        /* фиксируем высоту */
+  width: auto;         /* ширина подстраивается */
+  display: block;
+}
+.brand a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
