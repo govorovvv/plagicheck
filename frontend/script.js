@@ -136,26 +136,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-async function includeHTML(id, file, callback) {
+<script>
+async function includeHTML(id, file, onDone) {
   const el = document.getElementById(id);
-  if (el) {
-    try {
-      const resp = await fetch(file);
-      if (resp.ok) {
-        el.innerHTML = await resp.text();
-        if (callback) callback(); // вызовем колбэк после вставки
-      }
-    } catch (e) {
-      console.error("Ошибка подгрузки " + file, e);
+  if (!el) return;
+  try {
+    const resp = await fetch(file);
+    if (resp.ok) {
+      el.innerHTML = await resp.text();
+      if (typeof onDone === "function") onDone();
     }
-  }
+  } catch (e) { console.error("Include failed:", file, e); }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  includeHTML("site-header", "header.html");
+  // подгружаем шапку и после этого считаем её высоту
+  includeHTML("site-header", "header.html", () => {
+    const headerEl = document.querySelector(".header");
+    if (headerEl) {
+      document.body.style.paddingTop = headerEl.offsetHeight + "px";
+      // на всякий случай обновим при ресайзе
+      window.addEventListener("resize", () => {
+        document.body.style.paddingTop = headerEl.offsetHeight + "px";
+      });
+    }
+  });
+
   includeHTML("site-footer", "footer.html", () => {
     const y = document.querySelector("#year");
     if (y) y.textContent = new Date().getFullYear();
   });
 });
-
+</script>
