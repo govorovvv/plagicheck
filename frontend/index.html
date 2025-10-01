@@ -4,25 +4,45 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PlagiCheck — проверка на заимствования</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml"><!-- или .ico/.png -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<div id="site-header"></div>
 
-  <main class="container hero">
-  <div class="hero-image">
-    <picture>
-      <source srcset="images/hero.webp" type="image/webp">
-      <img src="images/hero.jpg" alt="PlagiCheck">
-    </picture>
+  <!-- общий хедер (подгружается из header.html) -->
+  <div id="site-header"></div>
+
+  <!-- герой-блок на всю ширину/высоту с полупрозрачной вуалью -->
+  <main class="hero-section">
     <a href="app.html" class="btn hero-btn">ВХОД</a>
-  </div>
-</main>
+  </main>
 
+  <!-- общий футер (подгружается из footer.html) -->
+  <div id="site-footer"></div>
 
-<div id="site-footer"></div>
+  <script>
+    // инклюд общего хедера/футера + установка года после загрузки футера
+    async function includeHTML(id, file, onDone) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try {
+        const resp = await fetch(file);
+        if (resp.ok) {
+          el.innerHTML = await resp.text();
+          if (typeof onDone === "function") onDone();
+        }
+      } catch (e) {
+        console.error("Include failed:", file, e);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      includeHTML("site-header", "header.html");
+      includeHTML("site-footer", "footer.html", () => {
+        const y = document.querySelector("#year");
+        if (y) y.textContent = new Date().getFullYear();
+      });
+    });
+  </script>
 
   <script src="script.js" defer></script>
-</body>
-</html>

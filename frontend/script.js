@@ -134,13 +134,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-async function includeHTML(id, file) {
+
+
+async function includeHTML(id, file, callback) {
   const el = document.getElementById(id);
   if (el) {
     try {
       const resp = await fetch(file);
       if (resp.ok) {
         el.innerHTML = await resp.text();
+        if (callback) callback(); // вызовем колбэк после вставки
       }
     } catch (e) {
       console.error("Ошибка подгрузки " + file, e);
@@ -150,10 +153,10 @@ async function includeHTML(id, file) {
 
 document.addEventListener("DOMContentLoaded", () => {
   includeHTML("site-header", "header.html");
-  includeHTML("site-footer", "footer.html");
-
-  // обновляем год в футере
-  const y = document.querySelector("#site-footer #year");
-  if (y) y.textContent = new Date().getFullYear();
+  includeHTML("site-footer", "footer.html", () => {
+    const y = document.querySelector("#year");
+    if (y) y.textContent = new Date().getFullYear();
+  });
 });
+
 
