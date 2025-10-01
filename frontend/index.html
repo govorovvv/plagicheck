@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PlagiCheck — проверка на заимствования</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml"><!-- или .ico/.png -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="header">
@@ -18,16 +18,17 @@
         <a href="index.html">Главная</a>
         <a href="app.html">Проверка</a>
         <a href="about.html">О сервисе</a>
+        <a href="faq.html">FAQ</a>
         <a href="contacts.html">Контакты</a>
       </nav>
     </div>
   </header>
 
   <main class="container hero" style="text-align:center; padding:60px 0;">
-    <!-- Здесь твоя картинка -->
-    <img src="main-image.png" alt="PlagiCheck" style="max-width:600px; width:100%; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.1);">
-
-    <!-- Кнопка входа -->
+    <picture>
+      <source srcset="images/hero.webp" type="image/webp">
+      <img src="images/hero.jpg" alt="PlagiCheck" style="max-width:900px;width:100%;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1);">
+    </picture>
     <div style="margin-top:30px;">
       <a href="app.html" class="btn" style="font-size:20px; padding:16px 40px;">ВХОД</a>
     </div>
@@ -38,7 +39,10 @@
       <span class="muted">© <span id="year"></span> PlagiCheck</span>
       <div>
         <a class="link" href="/privacy.html">Политика</a> ·
-        <a class="link" href="/terms.html">Условия</a>
+        <a class="link" href="/terms.html">Условия</a> ·
+        <a class="link" href="/about.html">О сервисе</a> ·
+        <a class="link" href="/faq.html">FAQ</a> ·
+        <a class="link" href="/contacts.html">Контакты</a>
       </div>
     </div>
   </footer>
