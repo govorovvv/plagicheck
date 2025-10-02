@@ -1,6 +1,15 @@
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
 }
+
+html, body, button, input, textarea, select {
+  font-family: 'Roboto', Arial, sans-serif !important;
+}
+
 
 :root {
   --bg: #f6f8fb;             /* общий фон */
