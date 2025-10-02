@@ -1,18 +1,48 @@
-<!doctype html><html lang="ru"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Новости — PlagiCheck</title>
-<link rel="stylesheet" href="style.css">
-</head><body>
-<div id="site-header"></div>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Новости — PlagiCheck</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
 
-<main class="container" style="padding:24px 0;">
-  <h1>Новости</h1>
-  <div class="cards" style="margin-top:16px;">
-    <!-- те же 3 карточки, что на главной -->
-    <!-- ... скопируй блоки <article class="card news"> ... -->
-  </div>
-</main>
+  <main class="container" style="padding:24px 0;">
+    <h1>Новости</h1>
 
-<div id="site-footer"></div>
-<script src="script.js" defer></script>
-</body></html>
+    <div class="cards" style="margin-top:16px;">
+      <article class="card news">
+        <img src="images/news1.jpg" alt="Запуск сервиса PlagiCheck">
+        <div class="news-body">
+          <div class="news-date">01.10.2025</div>
+          <h3 class="news-title">Запуск сервиса PlagiCheck</h3>
+          <p class="muted">Мы запустили демо-версию: проверка текста, загрузка файлов и PDF-отчёты.</p>
+        </div>
+      </article>
+
+      <article class="card news">
+        <img src="images/news2.jpg" alt="Обновление алгоритма">
+        <div class="news-body">
+          <div class="news-date">09.07.2025</div>
+          <h3 class="news-title">Обновление алгоритма</h3>
+          <p class="muted">Подготовили архитектуру для реальной проверки, улучшили отчёт и валидацию.</p>
+        </div>
+      </article>
+
+      <article class="card news">
+        <img src="images/news3.jpg" alt="Появились PDF-отчёты">
+        <div class="news-body">
+          <div class="news-date">30.06.2025</div>
+          <h3 class="news-title">Появились PDF-отчёты</h3>
+          <p class="muted">Красивые PDF с итогами и метаданными доступны к скачиванию.</p>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="script.js" defer></script>
+</body>
+</html>
