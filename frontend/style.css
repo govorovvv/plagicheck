@@ -99,10 +99,38 @@ button[disabled]{opacity:.6; cursor:not-allowed}
 .list{margin:10px 0 0 0; padding-left:18px}
 .list li{margin:6px 0}
 
+
 /* футер */
-.footer{margin-top:28px}
-.footer .wrap{padding:18px 0}
-.footer a{color:var(--accent); text-decoration:none}
+.footer {
+  margin-top: 28px;
+  background: #f9fafb;
+  padding: 20px 0;
+  font-size: 14px;
+  color: #555;
+  text-align: center;
+}
+
+.footer p {
+  margin: 0 0 8px;
+}
+
+.footer-nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.footer-nav a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color .2s ease;
+}
+
+.footer-nav a:hover {
+  color: #1d4ed8; /* более насыщенный синий при наведении */
+}
+
 
 /* цвета результатов */
 .text-success{color:var(--success)}
@@ -225,3 +253,62 @@ a.link:hover{border-bottom-color:transparent}
 .news-hero{ width:100%; max-height:360px; object-fit:cover; border-radius:12px; margin-bottom:12px; }
 
 
+.faq {
+  margin-bottom: 24px;
+}
+.faq h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.faq p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.contact-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.contact-form input,
+.contact-form textarea {
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.contact-form .btn {
+  align-self: flex-start;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.contact-form .btn:hover {
+  background: #1d4ed8;
+}

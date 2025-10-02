@@ -161,3 +161,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+
+document.addEventListener("DOMContentLoaded", () => {
+  const contactForm = document.getElementById("contact-form");
+  if (contactForm) {
+    contactForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      // имитация отправки
+      const result = document.getElementById("contact-result");
+      result.textContent = "Спасибо! Ваше сообщение отправлено.";
+      contactForm.reset();
+    });
+  }
+});
+
+
