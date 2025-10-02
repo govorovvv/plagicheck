@@ -1,3 +1,39 @@
+// === include header/footer на каждой странице ===
+async function includeHTML(id, file, onDone) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  try {
+    const resp = await fetch(file);
+    if (resp.ok) {
+      el.innerHTML = await resp.text();
+      if (typeof onDone === "function") onDone();
+    } else {
+      console.error("Include failed:", file, resp.status);
+    }
+  } catch (e) {
+    console.error("Include failed:", file, e);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // подгружаем шапку и корректируем отступ под фиксированную шапку
+  includeHTML("site-header", "header.html", () => {
+    const headerEl = document.querySelector(".header");
+    if (headerEl) {
+      const applyPad = () => { document.body.style.paddingTop = headerEl.offsetHeight + "px"; };
+      applyPad();
+      window.addEventListener("resize", applyPad);
+    }
+  });
+
+  // подгружаем футер и ставим год
+  includeHTML("site-footer", "footer.html", () => {
+    const y = document.querySelector("#year");
+    if (y) y.textContent = new Date().getFullYear();
+  });
+});
+
+
 // =============================
 // PlagiCheck frontend script (no drag&drop)
 // =============================

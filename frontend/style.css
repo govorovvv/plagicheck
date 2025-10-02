@@ -168,8 +168,9 @@ a.link:hover{border-bottom-color:transparent}
   box-shadow: 0 2px 6px rgba(0,0,0,.05);
 }
 
-/* базовый отступ на случай первой отрисовки, точный задаёт JS */
+/* базовый отступ; точный выставит JS после включения header.html */
 body{ padding-top: 72px; }
+
 
 
 
