@@ -1,28 +1,28 @@
 // === include header/footer на каждой странице ===
 async function includeHTML(id, file, onDone) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  try {
-    const resp = await fetch(file);
-    if (resp.ok) {
-      el.innerHTML = await resp.text();
-      if (typeof onDone === "function") onDone();
-    } else {
-      console.error("Include failed:", file, resp.status);
-    }
-  } catch (e) {
-    console.error("Include failed:", file, e);
-  }
-}
+   const el = document.getElementById(id);
+   if (!el) return;
+   try {
+    const resp = await fetch(file.startsWith("/") ? file : `/${file}`);
+     if (resp.ok) {
+       el.innerHTML = await resp.text();
+       if (typeof onDone === "function") onDone();
+     } else {
+       console.error("Include failed:", file, resp.status);
+     }
+   } catch (e) {
+     console.error("Include failed:", file, e);
+   }
+ }
+ 
 
 document.addEventListener("DOMContentLoaded", () => {
-  includeHTML("site-header", "header.html");
-  includeHTML("site-footer", "footer.html", () => {
-    const y = document.querySelector("#year");
-    if (y) y.textContent = new Date().getFullYear();
-  });
-});
-
+  includeHTML("site-header", "/header.html");
+  includeHTML("site-footer", "/footer.html", () => {
+     const y = document.querySelector("#year");
+     if (y) y.textContent = new Date().getFullYear();
+   });
+ });
 
 
 // =============================
