@@ -14,7 +14,7 @@ async function includeHTML(id, file, onDone) {
      console.error("Include failed:", file, e);
    }
  }
- 
+
 
 document.addEventListener("DOMContentLoaded", () => {
   includeHTML("site-header", "/header.html");
