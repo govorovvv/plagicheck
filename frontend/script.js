@@ -203,3 +203,39 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+
+// === include header/footer на каждой странице ===
+async function includeHTML(id, file, onDone) {
+  const el = document.getElementById(id);
+  if (!el) {
+    console.warn(`[includeHTML] placeholder #${id} not found on this page`);
+    return;
+  }
+  try {
+    const url = file.startsWith("/") ? file : `/${file}`;
+    console.log(`[includeHTML] fetching ${url}`);
+    const resp = await fetch(url, { cache: "no-cache" });
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+    const html = await resp.text();
+    el.innerHTML = html;
+    if (typeof onDone === "function") onDone();
+  } catch (e) {
+    console.error(`[includeHTML] failed for ${file}:`, e);
+    // компактный индикатор на странице, чтобы мы видели сбой даже без консолей
+    el.innerHTML = `<div style="padding:8px; background:#fff3cd; color:#8a6d3b; border:1px solid #faebcc; border-radius:6px;">
+      Не удалось загрузить ${file}: ${e.message}
+    </div>`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  includeHTML("site-header", "/header.html");
+  includeHTML("site-footer", "/footer.html", () => {
+    const y = document.querySelector("#year");
+    if (y) y.textContent = new Date().getFullYear();
+  });
+});
+
+
