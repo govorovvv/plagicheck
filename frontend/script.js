@@ -162,6 +162,33 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+function renderSources(containerEl, sources) {
+  if (!Array.isArray(sources) || !sources.length) return;
+  const items = sources
+    .map(s => `<li><a class="link" target="_blank" rel="noopener" href="${s.url}">${s.title}</a></li>`)
+    .join("");
+  containerEl.innerHTML += `<div class="muted" style="margin-top:8px">
+    <b>Найденные совпадения:</b>
+    <ul>${items}</ul>
+  </div>`;
+}
+
+// Пример для проверки текста:
+const data = await postForm("/api/check-text", formData);
+textResult.innerHTML =
+  `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
+  `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
+renderSources(textResult, data.sources || []);
+
+// Аналогично для файла:
+const data = await postForm("/api/check-file", fd);
+fileResult.innerHTML =
+  `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
+  `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
+renderSources(fileResult, data.sources || []);
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const contactForm = document.getElementById("contact-form");
   if (contactForm) {

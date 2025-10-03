@@ -1,4 +1,3 @@
-from fastapi import FastAPI, UploadFile, Form, HTTPException
 from fastapi.responses import Response
 from hashlib import sha256
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -7,6 +6,8 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Dict, Any
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from .worker_tasks import run_plagiarism_check
 
 app = FastAPI()
 
@@ -88,69 +89,45 @@ def health():
 # ====== Валидация текста ======
 @app.post("/api/check-text")
 async def check_text(text: str = Form(...)):
-    text = (text or "").strip()
-    if not text:
-        raise HTTPException(status_code=400, detail="Пустой текст.")
-    if len(text) > MAX_TEXT_LEN:
-        raise HTTPException(status_code=413, detail="Текст слишком длинный.")
-    # метрики и хеш
-    word_count, char_count = _count_words_chars(text)
-    doc_hash = sha256(text.encode("utf-8", "ignore")).hexdigest()[:12]
-    report_id = _mk_report(
-        "text",
-        word_count=word_count,
-        char_count=char_count,
-        doc_hash=doc_hash
-    )
+    if not text or not text.strip():
+        raise HTTPException(status_code=400, detail="Введите текст для проверки.")
+    res = await run_plagiarism_check(text)
+    report_id = str(uuid4())
+    # TODO: если у тебя есть БД — сохрани отчёт с report_id
     return {
-        "originality": ORIGINALITY,
-        "plagiarism": PLAGIARISM,
-        "report_id": report_id
+        "originality": res["originality"],
+        "plagiarism": res["plagiarism"],
+        "report_id": report_id,
+        "sources": res.get("sources", []),
     }
 
 # ====== Валидация файла ======
 @app.post("/api/check-file")
-async def check_file(file: UploadFile):
-    if not file or not file.filename:
-        raise HTTPException(status_code=400, detail="Файл не передан.")
-    name = file.filename
-    lower = name.lower()
-    if not any(lower.endswith(ext) for ext in ALLOWED_EXT):
-        raise HTTPException(status_code=400, detail="Недопустимый тип файла. Разрешены: TXT, DOC, DOCX, PDF.")
-    # читаем и проверяем размер
-    blob = await file.read()
-    if not blob:
-        raise HTTPException(status_code=400, detail="Файл пуст.")
-    if len(blob) > MAX_FILE_BYTES:
-        raise HTTPException(status_code=413, detail="Файл слишком большой (лимит 10 МБ).")
-    # проверим mime (м.б. пустой у некоторых браузеров — не блокируем, если расширение валидно)
-    mime = (file.content_type or "").strip()
-    if mime and mime not in ALLOWED_MIME:
-        raise HTTPException(status_code=400, detail=f"Недопустимый MIME: {mime}")
-    # базовые метрики: попробуем извлечь текст для подсчёта (минимально)
-    word_count = None
-    char_count = None
+async def check_file(file: UploadFile = File(...)):
+    # Твоя текущая логика извлечения текста из файла — оставляем
+    raw = await file.read()
+    # Пример: если у тебя уже есть функция extract_text_any(...) — используй её
+    # extracted_text = extract_text_any(raw, file.filename)
+    # Если нет — как минимум для .txt:
+    extracted_text = None
     try:
-        if lower.endswith(".txt"):
-            text = blob.decode("utf-8", "ignore")
-            w, c = _count_words_chars(text)
-            word_count, char_count = w, c
+        if file.filename.lower().endswith(".txt"):
+            extracted_text = raw.decode("utf-8", errors="ignore")
+        # иначе воспользуйся своей существующей логикой извлечения
+        # extracted_text = existing_extract(...)
     except Exception:
-        pass
-    doc_hash = sha256(blob).hexdigest()[:12]
-    report_id = _mk_report(
-        "file",
-        filename=name,
-        mimetype=mime if mime else None,
-        size_bytes=len(blob),
-        word_count=word_count,
-        char_count=char_count,
-        doc_hash=doc_hash
-    )
+        extracted_text = None
+
+    if not extracted_text or not extracted_text.strip():
+        raise HTTPException(status_code=400, detail="Не удалось извлечь текст из файла.")
+
+    res = await run_plagiarism_check(extracted_text)
+    report_id = str(uuid4())
     return {
-        "originality": ORIGINALITY,
-        "plagiarism": PLAGIARISM,
-        "report_id": report_id
+        "originality": res["originality"],
+        "plagiarism": res["plagiarism"],
+        "report_id": report_id,
+        "sources": res.get("sources", []),
     }
 
 @app.get("/api/report/{report_id}")
