@@ -1,29 +1,5 @@
-// =============== Общие утилиты ===============
+// ====== Проверка текста и файлов (только app.html) ======
 const $ = (sel) => document.querySelector(sel);
-
-function setYear() {
-  const y = $("#year");
-  if (y) y.textContent = new Date().getFullYear();
-}
-
-function withLoading(btn, label, fn) {
-  return async (...args) => {
-    let original;
-    if (btn) {
-      original = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = label || "Проверяем…";
-    }
-    try {
-      return await fn(...args);
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = original ?? "Проверить";
-      }
-    }
-  };
-}
 
 async function postForm(url, formData) {
   const res = await fetch(url, { method: "POST", body: formData });
@@ -47,7 +23,7 @@ function validateFile(file) {
   const extOk  = /\.(txt|pdf|docx?)$/i.test(file.name);
   const mimeOk = !file.type || allowed.includes(file.type);
   if (!(extOk && mimeOk)) return "Допустимы только TXT, DOC, DOCX, PDF.";
-  const max = 10 * 1024 * 1024; // 10 MB
+  const max = 10 * 1024 * 1024; // 10 МБ
   if (file.size > max) return "Файл слишком большой (лимит 10 МБ).";
   return null;
 }
@@ -63,43 +39,15 @@ function renderSources(containerEl, sources) {
   </div>`;
 }
 
-// ========== Инклюды header/footer ==========
-async function includeHTML(id, file, onDone) {
-  const el = document.getElementById(id);
-  if (!el) {
-    console.warn(`[includeHTML] placeholder #${id} not found on this page`);
-    return;
-  }
-  try {
-    const url = file.startsWith("/") ? file : `/${file}`;
-    const resp = await fetch(url, { cache: "no-cache" });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const html = await resp.text();
-    el.innerHTML = html;
-    if (typeof onDone === "function") onDone();
-  } catch (e) {
-    console.error(`[includeHTML] failed for ${file}:`, e);
-    el.innerHTML = `<div style="padding:8px; background:#fff3cd; color:#8a6d3b; border:1px solid #faebcc; border-radius:6px;">
-      Не удалось загрузить ${file}: ${e.message}
-    </div>`;
-  }
-}
-
-// =============== Инициализация страниц ===============
 document.addEventListener("DOMContentLoaded", () => {
-  // Шапка/подвал
-  includeHTML("site-header", "/header.html");
-  includeHTML("site-footer", "/footer.html", setYear);
-
-  // Текстовая проверка
+  // ===== Текстовая проверка =====
   const textForm = $("#textForm");
   const textBtn = $("#textBtn");
   const textResult = $("#textResult");
   const textReportLink = $("#textReportLink");
 
   if (textForm) {
-    textForm.addEventListener(
-      "submit",
+    textForm.addEventListener("submit",
       withLoading(textBtn, "Проверяем…", async (e) => {
         e.preventDefault();
         if (textReportLink) textReportLink.style.display = "none";
@@ -114,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
           textResult.innerHTML =
             `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
             `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
-          if (Array.isArray(data.sources)) renderSources(textResult, data.sources);
+          renderSources(textResult, data.sources || []);
           if (data.report_id && textReportLink) {
             textReportLink.href = `/api/report/${data.report_id}`;
             textReportLink.textContent = "Скачать PDF-отчёт";
@@ -128,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // Файловая проверка
+  // ===== Файловая проверка =====
   const fileForm = $("#fileForm");
   const fileInput = $("#fileInput");
   const fileBtn = $("#fileBtn");
@@ -136,8 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const fileReportLink = $("#fileReportLink");
 
   if (fileForm && fileInput) {
-    fileForm.addEventListener(
-      "submit",
+    fileForm.addEventListener("submit",
       withLoading(fileBtn, "Проверяем…", async (e) => {
         e.preventDefault();
         if (fileReportLink) fileReportLink.style.display = "none";
@@ -155,7 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
           fileResult.innerHTML =
             `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
             `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
-          if (Array.isArray(data.sources)) renderSources(fileResult, data.sources);
+          renderSources(fileResult, data.sources || []);
           if (data.report_id && fileReportLink) {
             fileReportLink.href = `/api/report/${data.report_id}`;
             fileReportLink.textContent = "Скачать PDF-отчёт";
@@ -167,16 +114,5 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
     );
-  }
-
-  // Контакты — фейковая отправка
-  const contactForm = document.getElementById("contact-form");
-  if (contactForm) {
-    contactForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const result = document.getElementById("contact-result");
-      if (result) result.textContent = "Спасибо! Ваше сообщение отправлено.";
-      contactForm.reset();
-    });
   }
 });
