@@ -1,8 +1,7 @@
 from typing import List, Dict
 import httpx
 import xml.etree.ElementTree as ET
-from .settings import settings
-
+from settings import settings
 
 def _pick_queries_from_text(text: str, max_queries: int = 2) -> List[str]:
     # простая выборка 1–2 фраз по 6–10 слов

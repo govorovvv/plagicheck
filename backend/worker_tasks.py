@@ -1,7 +1,8 @@
 from typing import Dict, Any, List
 import random
-from .settings import settings
-from .search_web import find_sources_for_text
+from settings import settings
+from search_web import find_sources_for_text
+
 
 
 def _yandex_enabled() -> bool:

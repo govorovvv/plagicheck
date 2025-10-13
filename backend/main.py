@@ -7,7 +7,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from .worker_tasks import run_plagiarism_check
+from worker_tasks import run_plagiarism_check
+
+
 
 app = FastAPI()
 
