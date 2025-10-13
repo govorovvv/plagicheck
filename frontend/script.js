@@ -1,33 +1,4 @@
-// === include header/footer на каждой странице ===
-async function includeHTML(id, file, onDone) {
-   const el = document.getElementById(id);
-   if (!el) return;
-   try {
-    const resp = await fetch(file.startsWith("/") ? file : `/${file}`);
-     if (resp.ok) {
-       el.innerHTML = await resp.text();
-       if (typeof onDone === "function") onDone();
-     } else {
-       console.error("Include failed:", file, resp.status);
-     }
-   } catch (e) {
-     console.error("Include failed:", file, e);
-   }
- }
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  includeHTML("site-header", "/header.html");
-  includeHTML("site-footer", "/footer.html", () => {
-     const y = document.querySelector("#year");
-     if (y) y.textContent = new Date().getFullYear();
-   });
- });
-
-
-// =============================
-// PlagiCheck frontend script (no drag&drop)
-// =============================
+// =============== Общие утилиты ===============
 const $ = (sel) => document.querySelector(sel);
 
 function setYear() {
@@ -81,10 +52,46 @@ function validateFile(file) {
   return null;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  setYear();
+function renderSources(containerEl, sources) {
+  if (!Array.isArray(sources) || !sources.length) return;
+  const items = sources
+    .map(s => `<li><a class="link" target="_blank" rel="noopener" href="${s.url}">${s.title}</a></li>`)
+    .join("");
+  containerEl.innerHTML += `<div class="muted" style="margin-top:8px">
+    <b>Найденные совпадения:</b>
+    <ul>${items}</ul>
+  </div>`;
+}
 
-  // ---- ТЕКСТ ----
+// ========== Инклюды header/footer ==========
+async function includeHTML(id, file, onDone) {
+  const el = document.getElementById(id);
+  if (!el) {
+    console.warn(`[includeHTML] placeholder #${id} not found on this page`);
+    return;
+  }
+  try {
+    const url = file.startsWith("/") ? file : `/${file}`;
+    const resp = await fetch(url, { cache: "no-cache" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const html = await resp.text();
+    el.innerHTML = html;
+    if (typeof onDone === "function") onDone();
+  } catch (e) {
+    console.error(`[includeHTML] failed for ${file}:`, e);
+    el.innerHTML = `<div style="padding:8px; background:#fff3cd; color:#8a6d3b; border:1px solid #faebcc; border-radius:6px;">
+      Не удалось загрузить ${file}: ${e.message}
+    </div>`;
+  }
+}
+
+// =============== Инициализация страниц ===============
+document.addEventListener("DOMContentLoaded", () => {
+  // Шапка/подвал
+  includeHTML("site-header", "/header.html");
+  includeHTML("site-footer", "/footer.html", setYear);
+
+  // Текстовая проверка
   const textForm = $("#textForm");
   const textBtn = $("#textBtn");
   const textResult = $("#textResult");
@@ -107,6 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
           textResult.innerHTML =
             `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
             `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
+          if (Array.isArray(data.sources)) renderSources(textResult, data.sources);
           if (data.report_id && textReportLink) {
             textReportLink.href = `/api/report/${data.report_id}`;
             textReportLink.textContent = "Скачать PDF-отчёт";
@@ -120,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // ---- ФАЙЛ ----
+  // Файловая проверка
   const fileForm = $("#fileForm");
   const fileInput = $("#fileInput");
   const fileBtn = $("#fileBtn");
@@ -147,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
           fileResult.innerHTML =
             `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
             `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
+          if (Array.isArray(data.sources)) renderSources(fileResult, data.sources);
           if (data.report_id && fileReportLink) {
             fileReportLink.href = `/api/report/${data.report_id}`;
             fileReportLink.textContent = "Скачать PDF-отчёт";
@@ -159,83 +168,15 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     );
   }
-});
 
-
-function renderSources(containerEl, sources) {
-  if (!Array.isArray(sources) || !sources.length) return;
-  const items = sources
-    .map(s => `<li><a class="link" target="_blank" rel="noopener" href="${s.url}">${s.title}</a></li>`)
-    .join("");
-  containerEl.innerHTML += `<div class="muted" style="margin-top:8px">
-    <b>Найденные совпадения:</b>
-    <ul>${items}</ul>
-  </div>`;
-}
-
-// Пример для проверки текста:
-const data = await postForm("/api/check-text", formData);
-textResult.innerHTML =
-  `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
-  `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
-renderSources(textResult, data.sources || []);
-
-// Аналогично для файла:
-const data = await postForm("/api/check-file", fd);
-fileResult.innerHTML =
-  `Оригинальность: <b>${(+data.originality).toFixed(1)}%</b> · ` +
-  `Заимствования: <b>${(+data.plagiarism).toFixed(1)}%</b>`;
-renderSources(fileResult, data.sources || []);
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
+  // Контакты — фейковая отправка
   const contactForm = document.getElementById("contact-form");
   if (contactForm) {
     contactForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      // имитация отправки
       const result = document.getElementById("contact-result");
-      result.textContent = "Спасибо! Ваше сообщение отправлено.";
+      if (result) result.textContent = "Спасибо! Ваше сообщение отправлено.";
       contactForm.reset();
     });
   }
 });
-
-
-
-// === include header/footer на каждой странице ===
-async function includeHTML(id, file, onDone) {
-  const el = document.getElementById(id);
-  if (!el) {
-    console.warn(`[includeHTML] placeholder #${id} not found on this page`);
-    return;
-  }
-  try {
-    const url = file.startsWith("/") ? file : `/${file}`;
-    console.log(`[includeHTML] fetching ${url}`);
-    const resp = await fetch(url, { cache: "no-cache" });
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}`);
-    }
-    const html = await resp.text();
-    el.innerHTML = html;
-    if (typeof onDone === "function") onDone();
-  } catch (e) {
-    console.error(`[includeHTML] failed for ${file}:`, e);
-    // компактный индикатор на странице, чтобы мы видели сбой даже без консолей
-    el.innerHTML = `<div style="padding:8px; background:#fff3cd; color:#8a6d3b; border:1px solid #faebcc; border-radius:6px;">
-      Не удалось загрузить ${file}: ${e.message}
-    </div>`;
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  includeHTML("site-header", "/header.html");
-  includeHTML("site-footer", "/footer.html", () => {
-    const y = document.querySelector("#year");
-    if (y) y.textContent = new Date().getFullYear();
-  });
-});
-
-
