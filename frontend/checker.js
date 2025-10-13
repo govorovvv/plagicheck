@@ -1,5 +1,5 @@
 // ====== Проверка текста и файлов (только app.html) ======
-const $ = (sel) => document.querySelector(sel);
+//const $ = (sel) => document.querySelector(sel);
 
 async function postForm(url, formData) {
   const res = await fetch(url, { method: "POST", body: formData });
