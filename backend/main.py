@@ -1,79 +1,65 @@
+from __future__ import annotations
+
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import Response
+from uuid import uuid4
+from pathlib import Path
+from datetime import datetime
+from typing import Optional, Dict, Any
 from hashlib import sha256
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
-from uuid import uuid4
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Optional, Dict, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+
+# Внутренние модули
 from worker_tasks import run_plagiarism_check
 
-
-
-app = FastAPI()
-
-# ====== Константы демо ======
-ORIGINALITY = 83.3
-PLAGIARISM = 16.7
-MAX_TEXT_LEN = 200_000         # символов
-MAX_FILE_BYTES = 10 * 1024 * 1024
-ALLOWED_EXT = (".txt", ".doc", ".docx", ".pdf")
-ALLOWED_MIME = {
-    "text/plain",
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-}
-
-# ====== Пути / шаблоны ======
+# ---------- базовые настройки ----------
 BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+
 env = Environment(
-    loader=FileSystemLoader(str(BASE_DIR / "templates")),
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(["html", "xml"])
 )
 
-# ====== Простое хранилище метаданных отчётов (TTL 24ч) ======
+app = FastAPI(title="PlagiCheck API")
+
+# «демо» дефолты, если отчёт не найден
+ORIGINALITY_DEFAULT = 83.3
+PLAGIARISM_DEFAULT = 100.0 - ORIGINALITY_DEFAULT
+
+# Хранилище отчётов в памяти (вместо БД)
 REPORT_STORE: Dict[str, Dict[str, Any]] = {}
-REPORT_TTL = timedelta(hours=24)
 
-def _cleanup_store() -> None:
-    now = datetime.utcnow()
-    to_del = [rid for rid, meta in REPORT_STORE.items()
-              if now - meta.get("created_utc", now) > REPORT_TTL]
-    for rid in to_del:
-        REPORT_STORE.pop(rid, None)
 
-def _mk_report(
-    input_type: str,
-    *,
-    filename: Optional[str] = None,
-    mimetype: Optional[str] = None,
-    size_bytes: Optional[int] = None,
-    word_count: Optional[int] = None,
-    char_count: Optional[int] = None,
-    doc_hash: Optional[str] = None
-) -> str:
-    _cleanup_store()
+# ---------- утилиты ----------
+def _count_words_chars(text: str) -> tuple[int, int]:
+    words = [w for w in text.split() if w.strip()]
+    return len(words), len(text)
+
+
+def _mk_report(kind: str, **meta) -> str:
+    """Создаёт заготовку отчёта и кладёт в память метаданные."""
     rid = str(uuid4())
     REPORT_STORE[rid] = {
-        "created_utc": datetime.utcnow(),
-        "input_type": input_type,
-        "filename": filename,
-        "mimetype": mimetype,
-        "size_bytes": size_bytes,
-        "word_count": word_count,
-        "char_count": char_count,
-        "doc_hash": doc_hash
+        "id": rid,
+        "kind": kind,  # "text" | "file"
+        "created_at": datetime.utcnow().isoformat(),
+        "meta": meta,
+        # сюда позже положим результат проверки:
+        # "result": {"originality": .., "plagiarism": .., "sources": [...]}
     }
     return rid
 
-def _count_words_chars(text: str) -> tuple[int, int]:
-    words = [w for w in text.split() if w]
-    return len(words), len(text)
 
-def render_pdf(report_id: str, originality: float, plagiarism: float,
-               sources: list[dict], meta: Optional[Dict[str, Any]]) -> bytes:
+def render_pdf(
+    report_id: str,
+    originality: float,
+    plagiarism: float,
+    sources: list[dict],
+    meta: Optional[Dict[str, Any]],
+) -> bytes:
     template = env.get_template("report.html")
     html_str = template.render(
         report_id=report_id,
@@ -81,18 +67,13 @@ def render_pdf(report_id: str, originality: float, plagiarism: float,
         plagiarism=f"{plagiarism:.1f}",
         created_at=datetime.now().strftime("%d.%m.%Y %H:%M"),
         year=datetime.now().year,
-        sources=sources or [],          # ← добавили
-        meta=meta or {}
+        sources=sources or [],
+        meta=meta or {},
     )
     return HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()
 
 
-
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}
-
-# ====== Валидация текста ======
+# ---------- эндпоинты ----------
 @app.post("/api/check-text")
 async def check_text(text: str = Form(...)):
     if not text or not text.strip():
@@ -105,71 +86,16 @@ async def check_text(text: str = Form(...)):
             detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
         )
 
+    # Реальная проверка (с Яндекс Облаком)
     res = await run_plagiarism_check(text_clean)
 
-
-    # посчитаем метрики текста
-    wc, cc = _count_words_chars(text_clean)
-
-    # создаём запись отчёта и сохраняем результат
-
-report_id = _mk_report(
-    "text",
-    word_count=wc,
-    char_count=cc,
-    doc_hash=sha256(text_clean.encode("utf-8")).hexdigest()  # ← было text, стало text_clean
-)
-
-    REPORT_STORE[report_id]["result"] = {
-        "originality": res["originality"],
-        "plagiarism": res["plagiarism"],
-        "sources": res.get("sources", []),
-    }
-
-    return {
-        "originality": res["originality"],
-        "plagiarism": res["plagiarism"],
-        "report_id": report_id,
-        "sources": res.get("sources", []),
-    }
-
-
-# ====== Валидация файла ======
-@app.post("/api/check-file")
-async def check_file(file: UploadFile = File(...)):
-    raw = await file.read()
-
-    # Простая поддержка .txt; для PDF/DOC/DOCX подключай свой экстрактор
-    extracted_text = None
-    try:
-        if file.filename.lower().endswith(".txt"):
-            extracted_text = raw.decode("utf-8", errors="ignore")
-        # TODO: сюда твой экстрактор для PDF/DOC/DOCX
-    except Exception:
-        extracted_text = None
-
-    text_clean = (extracted_text or "").strip()
-    if not text_clean:
-        raise HTTPException(status_code=400, detail="Не удалось извлечь текст из файла.")
-    if len(text_clean) < 500:
-        raise HTTPException(
-            status_code=400,
-            detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
-        )
-
-    # Реальная проверка
-    res = await run_plagiarism_check(text_clean)
-
-    # Метрики и сохранение отчёта
+    # Метрики + запись отчёта
     wc, cc = _count_words_chars(text_clean)
     report_id = _mk_report(
-        "file",
-        filename=file.filename,
-        mimetype=file.content_type,
-        size_bytes=len(raw),
+        "text",
         word_count=wc,
         char_count=cc,
-        doc_hash=sha256(raw).hexdigest()
+        doc_hash=sha256(text_clean.encode("utf-8")).hexdigest(),
     )
     REPORT_STORE[report_id]["result"] = {
         "originality": res["originality"],
@@ -185,19 +111,69 @@ async def check_file(file: UploadFile = File(...)):
     }
 
 
+@app.post("/api/check-file")
+async def check_file(file: UploadFile = File(...)):
+    raw = await file.read()
+
+    # Простейший экстрактор: поддержим .txt;
+    # для PDF/DOC/DOCX подключи свой экстрактор
+    extracted_text: Optional[str] = None
+    try:
+        if file.filename.lower().endswith(".txt"):
+            extracted_text = raw.decode("utf-8", errors="ignore")
+        # TODO: extract_text_any(raw, file.filename) для остальных форматов
+    except Exception:
+        extracted_text = None
+
+    text_clean = (extracted_text or "").strip()
+    if not text_clean:
+        raise HTTPException(status_code=400, detail="Не удалось извлечь текст из файла.")
+    if len(text_clean) < 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
+        )
+
+    # Проверка
+    res = await run_plagiarism_check(text_clean)
+
+    # Метрики + запись отчёта
+    wc, cc = _count_words_chars(text_clean)
+    report_id = _mk_report(
+        "file",
+        filename=file.filename,
+        mimetype=file.content_type,
+        size_bytes=len(raw),
+        word_count=wc,
+        char_count=cc,
+        doc_hash=sha256(raw).hexdigest(),
+    )
+    REPORT_STORE[report_id]["result"] = {
+        "originality": res["originality"],
+        "plagiarism": res["plagiarism"],
+        "sources": res.get("sources", []),
+    }
+
+    return {
+        "originality": res["originality"],
+        "plagiarism": res["plagiarism"],
+        "report_id": report_id,
+        "sources": res.get("sources", []),
+    }
+
 
 @app.get("/api/report/{report_id}")
 async def get_report(report_id: str):
-    _cleanup_store()
-    meta = REPORT_STORE.get(report_id)
+    meta_all = REPORT_STORE.get(report_id)
 
-    # значения по умолчанию (если отчёт не найден)
-    originality = ORIGINALITY
-    plagiarism = PLAGIARISM
+    originality = ORIGINALITY_DEFAULT
+    plagiarism = PLAGIARISM_DEFAULT
     sources: list[dict] = []
+    meta: Dict[str, Any] | None = None
 
-    if meta and isinstance(meta.get("result"), dict):
-        r = meta["result"]
+    if meta_all:
+        meta = meta_all.get("meta", {})
+        r = meta_all.get("result") or {}
         originality = float(r.get("originality", originality))
         plagiarism = float(r.get("plagiarism", plagiarism))
         sources = list(r.get("sources", []))
