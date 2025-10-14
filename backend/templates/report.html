@@ -27,6 +27,25 @@
     </div>
   </section>
 
+<!-- ===== Найденные совпадения ===== -->
+<section class="section">
+  <h2>Найденные совпадения</h2>
+
+  {% if sources and sources|length > 0 %}
+    <ol class="sources">
+      {% for s in sources %}
+        <li>
+          <div class="src-title">{{ s.title }}</div>
+          <div class="src-url"><a href="{{ s.url }}">{{ s.url }}</a></div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="muted">Совпадения не обнаружены по результатам веб-поиска.</p>
+  {% endif %}
+</section>
+
+
   <section class="meta">
     <div><b>ID отчёта:</b> {{ report_id }}</div>
     <div><b>Дата/время:</b> {{ created_at }}</div>

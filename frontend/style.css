@@ -374,3 +374,17 @@ a.link:hover{border-bottom-color:transparent}
 .contact-form .btn:hover {
   background: #1d4ed8;
 }
+
+.sources-list { margin: 6px 0 0; padding-left: 18px; }
+.sources-list li { margin: 4px 0; }
+.link { color: var(--accent); text-decoration: none; }
+.link:hover { text-decoration: underline; }
+.muted { color: var(--muted); }
+
+.sources { margin: 8px 0 0; padding-left: 20px; }
+.sources li { margin: 8px 0; }
+.src-title { font-weight: 500; }
+.src-url a { color: #2563eb; text-decoration: none; word-break: break-all; }
+.src-url a:hover { text-decoration: underline; }
+.muted { color: #6b7280; }
+

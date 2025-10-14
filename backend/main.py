@@ -72,7 +72,8 @@ def _count_words_chars(text: str) -> tuple[int, int]:
     words = [w for w in text.split() if w]
     return len(words), len(text)
 
-def render_pdf(report_id: str, originality: float, plagiarism: float, meta: Optional[Dict[str, Any]]) -> bytes:
+def render_pdf(report_id: str, originality: float, plagiarism: float,
+               sources: list[dict], meta: Optional[Dict[str, Any]]) -> bytes:
     template = env.get_template("report.html")
     html_str = template.render(
         report_id=report_id,
@@ -80,9 +81,12 @@ def render_pdf(report_id: str, originality: float, plagiarism: float, meta: Opti
         plagiarism=f"{plagiarism:.1f}",
         created_at=datetime.now().strftime("%d.%m.%Y %H:%M"),
         year=datetime.now().year,
+        sources=sources or [],          # ← добавили
         meta=meta or {}
     )
     return HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()
+
+
 
 @app.get("/api/health")
 def health():
@@ -94,8 +98,23 @@ async def check_text(text: str = Form(...)):
     if not text or not text.strip():
         raise HTTPException(status_code=400, detail="Введите текст для проверки.")
     res = await run_plagiarism_check(text)
-    report_id = str(uuid4())
-    # TODO: если у тебя есть БД — сохрани отчёт с report_id
+
+    # посчитаем метрики текста
+    wc, cc = _count_words_chars(text)
+
+    # создаём запись отчёта и сохраняем результат
+    report_id = _mk_report(
+        "text",
+        word_count=wc,
+        char_count=cc,
+        doc_hash=sha256(text.encode("utf-8")).hexdigest()
+    )
+    REPORT_STORE[report_id]["result"] = {
+        "originality": res["originality"],
+        "plagiarism": res["plagiarism"],
+        "sources": res.get("sources", []),
+    }
+
     return {
         "originality": res["originality"],
         "plagiarism": res["plagiarism"],
@@ -103,20 +122,16 @@ async def check_text(text: str = Form(...)):
         "sources": res.get("sources", []),
     }
 
+
 # ====== Валидация файла ======
 @app.post("/api/check-file")
 async def check_file(file: UploadFile = File(...)):
-    # Твоя текущая логика извлечения текста из файла — оставляем
     raw = await file.read()
-    # Пример: если у тебя уже есть функция extract_text_any(...) — используй её
-    # extracted_text = extract_text_any(raw, file.filename)
-    # Если нет — как минимум для .txt:
     extracted_text = None
     try:
         if file.filename.lower().endswith(".txt"):
             extracted_text = raw.decode("utf-8", errors="ignore")
-        # иначе воспользуйся своей существующей логикой извлечения
-        # extracted_text = existing_extract(...)
+        # TODO: сюда твой экстрактор для PDF/DOC/DOCX
     except Exception:
         extracted_text = None
 
@@ -124,7 +139,23 @@ async def check_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Не удалось извлечь текст из файла.")
 
     res = await run_plagiarism_check(extracted_text)
-    report_id = str(uuid4())
+
+    wc, cc = _count_words_chars(extracted_text)
+    report_id = _mk_report(
+        "file",
+        filename=file.filename,
+        mimetype=file.content_type,
+        size_bytes=len(raw),
+        word_count=wc,
+        char_count=cc,
+        doc_hash=sha256(raw).hexdigest()
+    )
+    REPORT_STORE[report_id]["result"] = {
+        "originality": res["originality"],
+        "plagiarism": res["plagiarism"],
+        "sources": res.get("sources", []),
+    }
+
     return {
         "originality": res["originality"],
         "plagiarism": res["plagiarism"],
@@ -132,10 +163,23 @@ async def check_file(file: UploadFile = File(...)):
         "sources": res.get("sources", []),
     }
 
+
 @app.get("/api/report/{report_id}")
 async def get_report(report_id: str):
     _cleanup_store()
     meta = REPORT_STORE.get(report_id)
-    pdf_bytes = render_pdf(report_id, ORIGINALITY, PLAGIARISM, meta)
+
+    # значения по умолчанию (если отчёт не найден)
+    originality = ORIGINALITY
+    plagiarism = PLAGIARISM
+    sources: list[dict] = []
+
+    if meta and isinstance(meta.get("result"), dict):
+        r = meta["result"]
+        originality = float(r.get("originality", originality))
+        plagiarism = float(r.get("plagiarism", plagiarism))
+        sources = list(r.get("sources", []))
+
+    pdf_bytes = render_pdf(report_id, originality, plagiarism, sources, meta)
     headers = {"Content-Disposition": f'inline; filename="plagicheck_{report_id}.pdf"'}
     return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)

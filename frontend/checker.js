@@ -29,15 +29,26 @@ function validateFile(file) {
 }
 
 function renderSources(containerEl, sources) {
-  if (!Array.isArray(sources) || !sources.length) return;
+  const wrap = document.createElement("div");
+  wrap.style.marginTop = "8px";
+
+  if (!Array.isArray(sources) || sources.length === 0) {
+    wrap.innerHTML = `<div class="muted">Совпадения не найдены.</div>`;
+    containerEl.appendChild(wrap);
+    return;
+  }
+
   const items = sources
-    .map(s => `<li><a class="link" target="_blank" rel="noopener" href="${s.url}">${s.title}</a></li>`)
+    .map(s => `<li><a class="link" target="_blank" rel="noopener" href="${s.url}">${s.title || s.url}</a></li>`)
     .join("");
-  containerEl.innerHTML += `<div class="muted" style="margin-top:8px">
-    <b>Найденные совпадения:</b>
-    <ul>${items}</ul>
-  </div>`;
+
+  wrap.innerHTML = `
+    <div class="muted"><b>Найденные совпадения:</b></div>
+    <ul class="sources-list">${items}</ul>
+  `;
+  containerEl.appendChild(wrap);
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   // ===== Текстовая проверка =====
