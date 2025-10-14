@@ -97,10 +97,19 @@ def health():
 async def check_text(text: str = Form(...)):
     if not text or not text.strip():
         raise HTTPException(status_code=400, detail="Введите текст для проверки.")
-    res = await run_plagiarism_check(text)
+
+    text_clean = text.strip()
+    if len(text_clean) < 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
+        )
+
+    res = await run_plagiarism_check(text_clean)
+
 
     # посчитаем метрики текста
-    wc, cc = _count_words_chars(text)
+    wc, cc = _count_words_chars(text_clean)
 
     # создаём запись отчёта и сохраняем результат
     report_id = _mk_report(
@@ -135,12 +144,20 @@ async def check_file(file: UploadFile = File(...)):
     except Exception:
         extracted_text = None
 
-    if not extracted_text or not extracted_text.strip():
-        raise HTTPException(status_code=400, detail="Не удалось извлечь текст из файла.")
+    
 
-    res = await run_plagiarism_check(extracted_text)
+text_clean = (extracted_text or "").strip()
+if len(text_clean) < 500:
+    raise HTTPException(
+        status_code=400,
+        detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
+    )
 
-    wc, cc = _count_words_chars(extracted_text)
+res = await run_plagiarism_check(text_clean)
+
+
+
+    wc, cc = _count_words_chars(text_clean)
     report_id = _mk_report(
         "file",
         filename=file.filename,
