@@ -112,12 +112,14 @@ async def check_text(text: str = Form(...)):
     wc, cc = _count_words_chars(text_clean)
 
     # создаём запись отчёта и сохраняем результат
-    report_id = _mk_report(
-        "text",
-        word_count=wc,
-        char_count=cc,
-        doc_hash=sha256(text.encode("utf-8")).hexdigest()
-    )
+
+report_id = _mk_report(
+    "text",
+    word_count=wc,
+    char_count=cc,
+    doc_hash=sha256(text_clean.encode("utf-8")).hexdigest()  # ← было text, стало text_clean
+)
+
     REPORT_STORE[report_id]["result"] = {
         "originality": res["originality"],
         "plagiarism": res["plagiarism"],
@@ -136,6 +138,8 @@ async def check_text(text: str = Form(...)):
 @app.post("/api/check-file")
 async def check_file(file: UploadFile = File(...)):
     raw = await file.read()
+
+    # Простая поддержка .txt; для PDF/DOC/DOCX подключай свой экстрактор
     extracted_text = None
     try:
         if file.filename.lower().endswith(".txt"):
@@ -144,19 +148,19 @@ async def check_file(file: UploadFile = File(...)):
     except Exception:
         extracted_text = None
 
-    
+    text_clean = (extracted_text or "").strip()
+    if not text_clean:
+        raise HTTPException(status_code=400, detail="Не удалось извлечь текст из файла.")
+    if len(text_clean) < 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
+        )
 
-text_clean = (extracted_text or "").strip()
-if len(text_clean) < 500:
-    raise HTTPException(
-        status_code=400,
-        detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
-    )
+    # Реальная проверка
+    res = await run_plagiarism_check(text_clean)
 
-res = await run_plagiarism_check(text_clean)
-
-
-
+    # Метрики и сохранение отчёта
     wc, cc = _count_words_chars(text_clean)
     report_id = _mk_report(
         "file",
@@ -179,6 +183,7 @@ res = await run_plagiarism_check(text_clean)
         "report_id": report_id,
         "sources": res.get("sources", []),
     }
+
 
 
 @app.get("/api/report/{report_id}")
