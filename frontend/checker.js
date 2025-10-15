@@ -1,7 +1,5 @@
 // ===== Проверка текста и файлов (страница app.html) =====
 
-// Короткий алиас выбора элементов
-const $ = (sel) => document.querySelector(sel);
 
 // Универсальный POST
 async function postForm(url, formData) {
