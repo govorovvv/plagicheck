@@ -5,81 +5,71 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="PlagiCheck — онлайн-сервис проверки текста на заимствования. Загрузите документ или вставьте текст и получите PDF-отчёт.">
   <meta property="og:title" content="PlagiCheck — проверка текста на заимствования">
-  <meta property="og:description" content="Проверка текста и PDF-отчёт за секунды. Демо-версия.">
+  <meta property="og:description" content="Проверка текста и PDF-отчёт за секунды.">
   <meta property="og:url" content="https://plagicheck.ru/">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#000000">
   <title>PlagiCheck — проверка текста на заимствования</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="icon" href="favicon.png">
-  <link rel="stylesheet" href="style.css">
- 
+
+  <link rel="icon" href="/favicon.png">
+  <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
-<div id="site-header"></div>
+  <div id="site-header"></div>
 
-<main class="container">
-  <section class="hero">
-    <span class="badge">Демо-версия</span>
-    <h1>Проверка текста на заимствования</h1>
-    <p class="muted">Загрузите документ или вставьте текст — получите PDF-отчёт за секунды.</p>
-  </section>
+  <main class="container">
+    <section class="hero">
+      <h1>Проверка текста на заимствования</h1>
+      <p class="muted">Загрузите документ или вставьте текст — получите PDF-отчёт.</p>
+    </section>
 
+    <!-- ===== Проверить текст ===== -->
     <section id="check" class="card">
       <h2>Проверить текст</h2>
       <form id="textForm" class="form">
         <label for="text">Вставьте текст</label>
         <textarea id="text" name="text" placeholder="Вставьте сюда ваш текст…"></textarea>
-        <div class="row">
-          <button type="submit" id="textBtn">Проверить</button>
-          <a id="textReportLink" class="link" href="#" style="display:none;">Скачать PDF-отчёт</a>
+
+        <div class="actions">
+          <button type="submit" id="textBtn" class="btn btn-warm btn-lg">Проверить текст</button>
+          <!-- Появляются после ответа -->
+          <a id="textReportOpen" class="btn btn-ghost-warm btn-lg" target="_blank" style="display:none">Открыть PDF</a>
+          <a id="textReportDownload" class="btn btn-warm btn-lg" style="display:none">Скачать PDF</a>
         </div>
+
         <p id="textResult" class="result"></p>
       </form>
     </section>
 
+    <!-- ===== Проверка файла ===== -->
     <section class="card" id="check-file">
-  <h2>Проверка файла</h2>
-  <form id="fileForm" class="form">
-    <label for="fileInput">Загрузите документ (TXT, DOC, DOCX, PDF)</label>
-    <input type="file"
-           id="fileInput"
-           name="file"
-           accept=".txt,.doc,.docx,.pdf"
-           required>
+      <h2>Проверка файла</h2>
+      <form id="fileForm" class="form">
+        <label for="fileInput">Загрузите документ (TXT, DOC, DOCX, PDF)</label>
+        <input
+          type="file"
+          id="fileInput"
+          name="file"
+          accept=".txt,.doc,.docx,.pdf"
+          required
+        />
 
-    <div class="row">
-      <button id="fileBtn" type="submit">Проверить файл</button>
-      <a id="fileReportLink" href="#" style="display:none" class="btn-ghost">Скачать PDF-отчёт</a>
-    </div>
+        <div class="actions">
+          <button id="fileBtn" type="submit" class="btn btn-warm btn-lg">Проверить файл</button>
+          <!-- Появляются после ответа -->
+          <a id="fileReportOpen" class="btn btn-ghost-warm btn-lg" target="_blank" style="display:none">Открыть PDF</a>
+          <a id="fileReportDownload" class="btn btn-warm btn-lg" style="display:none">Скачать PDF</a>
+        </div>
 
-    <div id="fileResult" class="result muted"></div>
-  </form>
-</section>
-
-
-      
-
-    <section id="about" class="card">
-      <h2>Как это работает</h2>
-      <ul class="list">
-        <li>В демо-версии система всегда возвращает <b>83,3%</b> оригинальности (16,7% заимствований).</li>
-        <li>Можно вставить текст или загрузить файл (TXT, DOCX, PDF).</li>
-        <li>Доступна выгрузка PDF-отчёта с процентами и датой проверки.</li>
-      </ul>
-	<p class="muted">
-  Смотрите <a href="/privacy.html" class="link">Политику конфиденциальности</a> и
-  <a href="/terms.html" class="link">Пользовательское соглашение</a>.
-	</p>
+        <div id="fileResult" class="result muted"></div>
+      </form>
     </section>
-
   </main>
 
-<div id="site-footer"></div>
+  <div id="site-footer"></div>
 
- <script src="/core.js" defer></script>
-<script src="/checker.js" defer></script>
-
+  <script src="/core.js" defer></script>
+  <script src="/checker.js" defer></script>
 </body>
 </html>

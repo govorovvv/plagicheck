@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Dict, Any
-from fastapi import APIRouter
+
+from fastapi import APIRouter, Query
 from fastapi.responses import Response
 
 from store import REPORT_STORE, ORIGINALITY_DEFAULT, PLAGIARISM_DEFAULT
@@ -10,7 +11,12 @@ router = APIRouter(prefix="/api", tags=["reports"])
 
 
 @router.get("/report/{report_id}")
-async def get_report(report_id: str):
+async def get_report(report_id: str, dl: int = Query(0)):
+    """
+    Возвращает PDF-отчёт.
+    Параметр ?dl=1 — принудительно скачать файл (Content-Disposition: attachment).
+    По умолчанию отдаём inline (открыть в браузере/новой вкладке).
+    """
     meta_all = REPORT_STORE.get(report_id)
 
     originality = ORIGINALITY_DEFAULT
@@ -26,5 +32,9 @@ async def get_report(report_id: str):
         sources = list(r.get("sources", []))
 
     pdf_bytes = render_pdf(report_id, originality, plagiarism, sources, meta)
-    headers = {"Content-Disposition": f'inline; filename="plagicheck_{report_id}.pdf"'}
+
+    disposition = "attachment" if dl else "inline"
+    headers = {
+        "Content-Disposition": f'{disposition}; filename="plagicheck_{report_id}.pdf"'
+    }
     return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
