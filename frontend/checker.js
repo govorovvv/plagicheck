@@ -1,5 +1,7 @@
 // ===== Проверка текста и файлов (страница app.html) =====
 
+// Лимит для текста/файлов
+const MAX_BYTES = 10 * 1024 * 1024; // 10 МБ
 
 // Универсальный POST
 async function postForm(url, formData) {
@@ -25,8 +27,7 @@ function validateFile(file) {
   const extOk  = /\.(txt|pdf|docx?)$/i.test(file.name);
   const mimeOk = !file.type || allowed.includes(file.type);
   if (!(extOk && mimeOk)) return "Допустимы только TXT, DOC, DOCX, PDF.";
-  const max = 10 * 1024 * 1024; // 10 МБ
-  if (file.size > max) return "Файл слишком большой (лимит 10 МБ).";
+  if (file.size > MAX_BYTES) return "Файл превышает лимит 10 МБ.";
   return null;
 }
 
@@ -86,6 +87,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData(textForm);
       const txt = (formData.get("text") || "").toString().trim();
       if (!txt) { textResult.textContent = "Введите текст для проверки."; return; }
+
+      // Предвалидация: минимум 500 символов и максимум 10 МБ (UTF-8)
+      const byteLen = new TextEncoder().encode(txt).length;
+      if (byteLen > MAX_BYTES) {
+        textResult.textContent = "Текст превышает лимит 10 МБ. Сократите текст и попробуйте снова.";
+        return;
+      }
+      if (txt.length < 500) {
+        textResult.textContent = "Текст слишком мал для оценки оригинальности. Минимум 500 символов.";
+        return;
+      }
 
       try {
         const data = await postForm("/api/check-text", formData);

@@ -25,25 +25,35 @@
     </section>
 
     <!-- ===== Проверить текст ===== -->
-    <section id="check" class="card">
-      <h2>Проверить текст</h2>
-      <form id="textForm" class="form"
-            method="post" action="/api/check-text" novalidate>
-        <label for="text">Вставьте текст</label>
-        <textarea id="text" name="text" placeholder="Вставьте сюда ваш текст…"></textarea>
+ <section id="check" class="card">
+  <h2>Проверить текст</h2>
+  <form id="textForm" class="form" method="post" action="/api/check-text" novalidate>
+    <label for="text">Вставьте текст</label>
+    <textarea id="text" name="text" placeholder="Вставьте сюда ваш текст…"></textarea>
+    <div class="muted" style="margin:.25rem 0 .5rem">
+      Минимум 500 символов, максимум 10&nbsp;МБ.
+    </div>
 
-        <div class="actions">
-          <button type="submit" id="textBtn" class="btn btn-warm btn-lg">Проверить текст</button>
-          <!-- Появляются после ответа -->
-          <a id="textReportOpen" class="btn btn-ghost-warm btn-lg" target="_blank" style="display:none">Открыть PDF</a>
-          <a id="textReportDownload" class="btn btn-warm btn-lg" style="display:none">Скачать PDF</a>
-        </div>
+    <div class="actions">
+      <button type="submit" id="textBtn" class="btn btn-warm btn-lg">Проверить текст</button>
+      <a id="textReportOpen" class="btn btn-ghost-warm btn-lg" target="_blank" style="display:none">Открыть PDF</a>
+      <a id="textReportDownload" class="btn btn-warm btn-lg" style="display:none">Скачать PDF</a>
+    </div>
 
-        <p id="textResult" class="result"></p>
-      </form>
-    </section>
+    <p id="textResult" class="result"></p>
+  </form>
+</section>
+
 
     <!-- ===== Проверка файла ===== -->
+<section class="card" id="check-file">
+  <h2>Проверка файла</h2>
+  <form id="fileForm" class="form" method="post" action="/api/check-file" enctype="multipart/form-data" novalidate>
+    <label for="fileInput">Загрузите документ (TXT, DOC, DOCX, PDF)</label>
+    <input type="file" id="fileInput" name="file" accept=".txt,.doc,.docx,.pdf" required />
+    
+    …
+
     <section class="card" id="check-file">
       <h2>Проверка файла</h2>
       <form id="fileForm" class="form"
@@ -56,6 +66,10 @@
           accept=".txt,.doc,.docx,.pdf"
           required
         />
+
+<div class="muted" style="margin:.25rem 0 .5rem">
+      Поддерживаются TXT, PDF (не скан), DOCX. Лимит&nbsp;— 10&nbsp;МБ.
+    </div>
 
         <div class="actions">
           <button id="fileBtn" type="submit" class="btn btn-warm btn-lg">Проверить файл</button>
