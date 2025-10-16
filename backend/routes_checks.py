@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Optional, Dict, Any
+from extractors import extract_text_any
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 
@@ -48,23 +49,23 @@ async def check_text(text: str = Form(...)) -> Dict[str, Any]:
 async def check_file(file: UploadFile = File(...)) -> Dict[str, Any]:
     raw = await file.read()
 
-    extracted_text: Optional[str] = None
-    try:
-        if file.filename.lower().endswith(".txt"):
-            extracted_text = raw.decode("utf-8", errors="ignore")
-        # TODO: extract_text_any(raw, file.filename) для pdf/doc/docx
-    except Exception:
-        extracted_text = None
+    # НОВОЕ: универсальный извлекатель
+    text_clean = extract_text_any(raw, file.filename).strip()
 
-    text_clean = (extracted_text or "").strip()
     if not text_clean:
-        raise HTTPException(status_code=400, detail="Не удалось извлечь текст из файла.")
+        # Отдельное сообщение для потенциального скана PDF или .doc
+        raise HTTPException(
+            status_code=400,
+            detail="Не удалось извлечь текст из файла. Поддерживаются TXT, PDF (не скан), DOCX."
+        )
+
     if len(text_clean) < 500:
         raise HTTPException(
             status_code=400,
             detail="Текст слишком мал для оценки оригинальности. Минимум 500 символов."
         )
 
+    # Дальше — как было: проверка, сохранение отчёта
     res = await run_plagiarism_check(text_clean)
 
     wc, cc = count_words_chars(text_clean)
@@ -75,7 +76,9 @@ async def check_file(file: UploadFile = File(...)) -> Dict[str, Any]:
         size_bytes=len(raw),
         word_count=wc,
         char_count=cc,
-        doc_hash=raw.hex()[:64],  # короткий «хэш» файла; при желании заменим на sha256(raw).hexdigest()
+        # для файла можно оставить короткий «хэш», но лучше SHA256:
+        # doc_hash=sha256(raw).hexdigest(),
+        doc_hash=raw.hex()[:64],
     )
     REPORT_STORE[report_id]["result"] = {
         "originality": res["originality"],
