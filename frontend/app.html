@@ -27,7 +27,8 @@
     <!-- ===== Проверить текст ===== -->
     <section id="check" class="card">
       <h2>Проверить текст</h2>
-      <form id="textForm" class="form">
+      <form id="textForm" class="form"
+            method="post" action="/api/check-text" novalidate>
         <label for="text">Вставьте текст</label>
         <textarea id="text" name="text" placeholder="Вставьте сюда ваш текст…"></textarea>
 
@@ -45,7 +46,8 @@
     <!-- ===== Проверка файла ===== -->
     <section class="card" id="check-file">
       <h2>Проверка файла</h2>
-      <form id="fileForm" class="form">
+      <form id="fileForm" class="form"
+            method="post" action="/api/check-file" enctype="multipart/form-data" novalidate>
         <label for="fileInput">Загрузите документ (TXT, DOC, DOCX, PDF)</label>
         <input
           type="file"
